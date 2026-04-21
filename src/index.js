@@ -6,6 +6,7 @@ import { MongoClient, ServerApiVersion } from "mongodb";
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/user.routes.js";
 import fileRoutes from "./routes/file.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,6 +34,7 @@ connectDB();
 
 app.use("/api", userRoutes);
 app.use("/api", fileRoutes);
+app.use("/api", chatRoutes);
 
 app.get("/", (req, res) => {
   res.send("DocumindAi Server running");

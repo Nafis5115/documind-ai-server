@@ -30,10 +30,9 @@ export const uploadFile = async (req, res) => {
       name: file.originalname,
       size: file.size,
     });
-    // 🔹 Chunk text
+
     const chunks = chunkText(text);
 
-    // 🔹 Save chunks
     const chunkDocs = await Promise.all(
       chunks.map(async (chunk, index) => {
         const embedding = await createEmbedding(chunk);
@@ -48,7 +47,7 @@ export const uploadFile = async (req, res) => {
     );
 
     await Chunk.insertMany(chunkDocs);
-    // cleanup file
+
     fs.unlinkSync(file.path);
 
     res.json({
