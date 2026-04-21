@@ -1,7 +1,7 @@
 import { askAI } from "../services/ai.service.js";
 import { searchChunks } from "../services/search.service.js";
 
-export const handleQuery = async (req, res) => {
+export const getAiAnswer = async (req, res) => {
   try {
     const { query } = req.body;
     const chunks = await searchChunks(query);
