@@ -1,5 +1,9 @@
 import fs from "fs";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
+import Document from "../models/document.model.js";
+import { chunkText } from "../helpers/chunkText.js";
+import Chunk from "../models/chunk.model.js";
+import { createEmbedding } from "../utils/embedding.js";
 
 export const uploadFile = async (req, res) => {
   try {
@@ -18,17 +22,39 @@ export const uploadFile = async (req, res) => {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-
       const strings = content.items.map((item) => item.str);
       text += strings.join(" ") + "\n";
     }
 
+    const document = await Document.create({
+      name: file.originalname,
+      size: file.size,
+    });
+    // 🔹 Chunk text
+    const chunks = chunkText(text);
+
+    // 🔹 Save chunks
+    const chunkDocs = await Promise.all(
+      chunks.map(async (chunk, index) => {
+        const embedding = await createEmbedding(chunk);
+
+        return {
+          documentId: document._id,
+          text: chunk,
+          chunkIndex: index,
+          embedding,
+        };
+      }),
+    );
+
+    await Chunk.insertMany(chunkDocs);
     // cleanup file
     fs.unlinkSync(file.path);
 
     res.json({
-      message: "File processed successfully",
-      text,
+      message: "File uploaded & processed",
+      documentId: document._id,
+      totalChunks: chunks.length,
     });
   } catch (error) {
     console.error("PDF ERROR:", error);
